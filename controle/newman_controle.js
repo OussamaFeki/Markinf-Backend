@@ -1,12 +1,12 @@
 var manager=require('../models/managers');
 var Newman = require('../models/Newman');
 var influencer=require('../models/influencers');
-getallinvit=function(id){
-    return new Promise((resolve,reject)=>{
-        resolve(getnewmanWithPopulate(id))
+// getallinvit=function(id){
+//     return new Promise((resolve,reject)=>{
+//         resolve(getnewmanWithPopulate(id))
         
-    })
-}
+//     })
+// }
 getall=function(){
     return new Promise((resolve,reject)=>{
         resolve(Newman.find({}).populate('managers',"email"))
@@ -15,27 +15,69 @@ getall=function(){
 const getnewmanWithPopulate = function(id) {
     return Newman.findById(id).populate("managers", " -influencers");
 };
-const addinftoman = function(manId, inf) {
-    return manager.findByIdAndUpdate(
-      manId,
-      { $addToSet: { influencers: inf._id } },
-      { new: true, useFindAndModify: false }
-    );
+addinftoman = function(manId, infid) {
+    return new Promise ((resolve,reject)=>{
+        influencer.findOne({_id:infid},(err,inf)=>{
+            if(err){
+                reject(err)
+            }else{
+                manager.findByIdAndUpdate(
+                    manId,
+                    { $addToSet: { influencers: inf._id } },
+                    { new: true, useFindAndModify: false },
+                    (err,doc)=>{
+                        if(err){
+                            reject(err)
+                        }else {
+                            resolve(doc)
+                        }
+                    }
+                  )
+            }
+        })
+    })
 };
-
-const addmantoinf=function(infId,man){
-    return influencer.findByIdAndUpdate(
-       infId,
-       {$addToSet:{ managers: man._id}},
-       { new: true, useFindAndModify: false}
-    )
+addmantoinf=function(infId,manid){
+    return new Promise ((resolve,reject)=>{
+        manager.findOne({_id:manid},(err,man)=>{
+           if (err){
+               reject(err)
+           }else{
+            influencer.findByIdAndUpdate(
+                infId,
+                {$addToSet:{ managers: man._id}},
+                { new: true, useFindAndModify: false}
+             ,(err,doc)=>{
+                 if (err){
+                     reject(err)
+                 }else{
+                     resolve(doc)
+                 }
+             })
+           }
+        })
+    })
 }
-const removemanfromnewman=function(infId,man){
-    return Newman.findByIdAndUpdate(
-        {id_inf:infId},
-        {$pull:{managers:man._id}},
-        { new: true, useFindAndModify: false }
-    )
+removemanfromnewman=function(infId,manId){
+    return new Promise((resolve,reject)=>{
+     manager.findOne({_id:manId},(err,man)=>{
+         if(err){
+             reject(err)
+         }else{
+            Newman.findOneAndUpdate(
+                {id_inf:infId},
+                {$pull:{managers:man._id}},
+                { new: true, useFindAndModify: false }
+            ,(err,doc)=>{
+            if(err){
+                reject(err)
+            }else{
+                resolve(doc)
+            }
+            })
+         }
+     })
+    })
 }
 accepter=function(id_influencer,id){
     return new Promise((resolve,reject)=>{
@@ -58,26 +100,40 @@ accepter=function(id_influencer,id){
      })
     })
 }
-const addmantonewman=function(manId,man){
-    return Newman.findByIdAndUpdate(
-        manId,
-        { $addToSet: { Manager: man._id } },
-        { new: true, useFindAndModify: false }
-      );
-}
-invitinf=function(id_man,id){ 
+addmantonewman=function(infId,manId){
     return new Promise((resolve,reject)=>{
-     manager.findOne({_id:id_man},(err,doc)=>{
-         if(err){
-             reject(err)
-         }else{
-            addmantonewman(id,doc)
-            resolve('invited')
-         }
-     })
-           
+        manager.findOne({_id:manId},(err,man)=>{
+            if(err){
+                reject(err)
+            }else{
+                Newman.findOneAndUpdate(
+                    {id_inf:infId},
+                    { $addToSet: { managers: man._id } },
+                    { new: true, useFindAndModify: false }
+                  ,(err,doc)=>{
+                      if(err){
+                          reject(err)
+                      }else{
+                          resolve(doc)
+                      }
+                  });
+            }
+        })
     })
 }
+// invitinf=function(id_man,id){ 
+//     return new Promise((resolve,reject)=>{
+//      manager.findOne({_id:id_man},(err,doc)=>{
+//          if(err){
+//              reject(err)
+//          }else{
+//             addmantonewman(id,doc)
+//             resolve('invited')
+//          }
+//      })
+           
+//     })
+// }
 refuse=function(id_influencer,id){
     return new Promise((resolve,reject)=>{
      manager.findOne({_id:id},(error,docu)=>{
@@ -90,4 +146,11 @@ refuse=function(id_influencer,id){
        })
 
 } 
-module.exports={getallinvit,refuse,accepter}
+getallinvit=function(id){
+    return new Promise((resolve,reject)=>{
+        Newman.findOne({id_inf:id}).populate('managers','-influencers -password').then(doc=>{
+            resolve(doc.managers)
+        })    
+    })
+}
+module.exports={getallinvit,accepter,addmantonewman,removemanfromnewman}

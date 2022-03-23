@@ -2,21 +2,10 @@ const route =require('express').Router();
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 var contr=require('../controle/inf_controle');
-
+var newman=require('../controle/newman_controle')
+const passport=require('passport')
+const upload =require('../upload/upimg')
 require('dotenv').config()
-const multer=require('multer');
-const storage =multer.diskStorage({
-    destination:(req, file, callBack)=>{
-        callBack(null,'upload')
-    },
-    filename:(req, file, callBack)=>{
-        callBack(null,file.originalname)
-    }
-})
-var upload =multer({ storage: storage })
-route.get('/',(req,res,next)=>{
-      res.send('connected')
-})
 var privatekey=process.env.PRIVATE_KEY
 verifytoken=(req,res,next)=>{
     let token=req.headers.authorization
@@ -86,10 +75,50 @@ route.patch('/updateinf/:id',verifytoken,(req,res,next)=>{
     .then((doc=>{res.status(200).json(doc)}))
     .catch((err)=>{res.status(400).json(err)})
 })
-route.post('/research',(req,res,next)=>{
-    contr.search(req.body.fullname)
+route.get('/influencer/:id',upload.single('image'),(req,res,next)=>{
+    contr.getinfbyid(req.params.id)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
+  })
+route.get('/research',(req,res,next)=>{
+    contr.search(req.query.fullname)
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-
+route.post('/addnewman',(req,res,next)=>{
+    newman.addmantonewman(req.body.infid,req.body.id)
+    .then(doc=>res.status(200).json(doc)) 
+})
+route.get('/facebook',passport.authenticate('facebook'))
+ route.get('/facebook/cb',passport.authenticate('facebook',{
+    failureRedirect:'/auth/signin'}),(req,res)=>{
+     res.redirect('/dashboard')
+    }
+)
+route.get('/mansofinf/:id',(req,res,next)=>{
+    contr.getmanofinf(req.params.id)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
+})
+route.get('/newman/:id_man',(req,res,next)=>{
+    newman.getallinvit(req.params.id_man)
+    .then(doc=>res.status(200).json(doc))
+  })
+route.put('/configinf/:id',(req,res,next)=>{
+    contr.changepassword(req.params.id,req.body.oldpass,req.body.newpass)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
+})
+route.put('/upavatarofinf/:id',upload.single('image'),(req,res,next)=>{
+    contr.upavatar(req.params.id,req.file)
+    .then(doc=>res.status(200).json(doc))
+})
+route.get('/refuseman',(req,res,next)=>{
+    newman.removemanfromnewman(req.query.inf_id,req.query.man_id)
+    .then(doc=>res.status(200).json(doc))
+})
+route.get('/addnewman',(req,res,next)=>{
+    newman.addmantonewman(req.query.id,req.query.manid)
+    .then(doc=>res.status(200).json(doc))
+})
 module.exports=route

@@ -19,6 +19,7 @@ const { urlencoded } = require("express");
         required:true 
      },
      influencers:[{type:mongoose.Schema.Types.ObjectId,ref:'influencers'}],
+    //  newinf:[{type:mongoose.Schema.Types.ObjectId,ref:'influencers'}]
     
 })
 

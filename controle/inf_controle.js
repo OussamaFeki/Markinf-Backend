@@ -25,8 +25,10 @@ postNewInf=function(fullname,email,password,repass,error){
                             fullname,
                             email,
                             password:new influencer().Hashpass(password),
-                            image:"assets/admin/img/undraw_profile.svg"
                         }) 
+                            // if(image){
+                            //     newinf.image=image.path
+                            // }
                             newinf.save((err,doc)=>{
                             if (err){
                             
@@ -47,6 +49,19 @@ postNewInf=function(fullname,email,password,repass,error){
             })   
           
          })
+}
+upavatar=function(id,image){
+    return new Promise((resolve,reject)=>{
+        influencer.updateOne({_id:id},{
+            image:`http://localhost:3000/image/${image.filename}`
+        },(err,doc)=>{
+            if(err){ 
+                reject(err)}
+               else{
+                resolve(doc)
+               }  
+        })
+    })
 }
 getall=function(){
     return new Promise((resolve,reject)=>{
@@ -121,15 +136,94 @@ login=function(email,password){
         
     })
 }
+getmanofinf=function(id){
+    return new Promise((resolve,reject)=>{
+     influencer.findById(id).populate("managers", "-influencers").then((doc)=>{resolve(doc.managers)})})
+}
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
 search=function(fullname){
     return new Promise((resolve,reject)=>{
-        influencer.find({fullname},(err,doc)=>{
-            if(err){
-                reject(err)
-            }else{
-                resolve(doc)
-            }
-        })
+        if(fullname) {
+            const regex = new RegExp(escapeRegex(fullname), 'gi');
+            influencer.find({fullname:regex},(err,doc)=>{
+                if(err){
+                    reject(err)
+                }else{
+                    resolve(doc)
+                }
+            })
+        } else {
+            influencer.find({},(err,doc)=>{
+                if(err){
+                    reject(err)
+                }else{
+                    resolve(doc)
+                }
+            })
+        }
     })
 }
-module.exports={getall,postNewInf,deleteinf,editinf,login,search}
+removemanfrominf=function(infId,manId){
+    return new Promise ((resolve,reject)=>{
+        manager.findOne({_id:manId},(err,man)=>{
+            if (err){
+                reject(err)
+            }else{
+                influencer.findByIdAndUpdate(
+                    infId,
+                    {$pull:{managers:man._id}},
+                    { new: true, useFindAndModify: false}
+                 ,(err,doc)=>{if (err){
+                     reject(err)
+                 }
+                else{
+                    resolve(doc)
+                }
+                })
+            }
+        })
+    }) 
+}
+getinfbyid=function(id){
+    return new Promise((resolve,reject)=>{
+        influencer.findOne({_id:id},(err,doc)=>{
+        if(err){
+            reject(err)
+        }else{
+            resolve(doc)
+        }
+        })
+    })
+
+}
+changepassword=function(id,oldpass,newpass){
+    return new Promise((resolve,reject)=>{ 
+        influencer.findOne({_id:id},(err,doc)=>{
+         if (influencer().Compass(oldpass,doc.password)){
+            influencer.updateOne({_id:id},{password:new influencer().Hashpass(newpass)},(err,doc)=>{
+                if (err){
+                    reject(err)
+                }else{
+                    resolve(doc)
+                    }
+            })
+               }
+         else{
+             reject('the oldpassword is incorrect')
+         }
+    })})
+   
+}
+module.exports={getall,
+    postNewInf,
+    deleteinf,
+    editinf,
+    login,
+    search,
+    removemanfrominf,
+    getmanofinf,
+    getinfbyid,
+    changepassword,
+    upavatar}

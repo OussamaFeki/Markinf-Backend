@@ -16,6 +16,19 @@ updateman=function(id,fullname,email,image,password){
       })
   })
 }
+upavatar=function(id,image){
+    return new Promise((resolve,reject)=>{
+        manager.updateOne({_id:id},{
+            image:`http://localhost:3000/image/${image.filename}`
+        },(err,doc)=>{
+            if(err){ 
+                reject(err)}
+               else{
+                resolve(doc)
+               }  
+        })
+    })
+}
 registry=function(fullname,email,password,repass,error){
     return new Promise((resolve,reject)=>{
         Admin.findOne({email:email},(err,doc)=>{
@@ -36,7 +49,7 @@ registry=function(fullname,email,password,repass,error){
                             fullname,
                             email,
                             password:new manager().Hashpass(password),
-                            image:"assets/admin/img/undraw_profile.svg"
+                            image:null
                         })
                             newman.save((err,doc)=>{
                             if (err){
@@ -109,7 +122,7 @@ getmanager=function(fullname){
 }
 getmanbyid=function(id){
         return new Promise((resolve,reject)=>{
-            manager.find({_id:id},(err,doc)=>{
+            manager.findOne({_id:id},(err,doc)=>{
             if(err){
                 reject(err)
             }else{
@@ -133,36 +146,87 @@ getinfofman=function(id){
     return new Promise((resolve,reject)=>{
      manager.findById(id).populate("influencers", "-managers").then((doc)=>{resolve(doc.influencers)})})
 }
-const removeinffromman= function(manId, inf) {
-    return manager.findByIdAndUpdate(
-      manId,
-      { $pull:{ influencers: inf._id }},
-      { new: true, useFindAndModify: false }
-    );
-};
-const removemanfrominf=function(infId,man){
-    return influencer.findByIdAndUpdate(
-       infId,
-       {$pull:{managers:man._id}},
-       { new: true, useFindAndModify: false}
-    )
-}
-fier=function(manId,id){
- manager.findOne({_id:manId},(err,doc)=>{
-    if(err){
-        reject(err)
-    }else{
-        influencer.findOne({_id:id},(error,docu)=>{
-            if (error){
-                reject(error)
+removeinffromman= function(manId, infId) {
+    return new Promise((resolve,reject)=>{
+        influencer.findOne({_id:infId},(err,doc)=>{
+            if(err){
+                reject(err)
             }else{
-               resolve( 
-                removeinffromman(manId,docu),
-                removemanfrominf(id,doc))
-                
+                manager.findByIdAndUpdate(
+                    manId,
+                    { $pull:{ influencers: doc._id }},
+                    { new: true, useFindAndModify: false }
+                  ,(err,doc)=>{
+                      if (err){
+                          reject(err)
+                      }else{
+                          resolve(doc)
+                      }
+                  })
+
+            } 
+        })
+    }) ;
+};
+removemanfrominf=function(infId,manId){
+    return new Promise ((resolve,reject)=>{
+        manager.findOne({_id:manId},(err,man)=>{
+            if (err){
+                reject(err)
+            }else{
+                influencer.findByIdAndUpdate(
+                    infId,
+                    {$pull:{managers:man._id}},
+                    { new: true, useFindAndModify: false}
+                 ,(err,doc)=>{if (err){
+                     reject(err)
+                 }
+                else{
+                    resolve(doc)
+                }
+                })
             }
-           })
-    }  
- })
+        })
+    }) 
 }
-module.exports={loginman,updateman,delman,registry,getmanager,getallman,getinfofman,getmanbyid,fier}
+// fiering=function(manId,docu,id,doc){
+// removeinffromman(manId,docu)
+// removemanfrominf(id,doc)
+// }
+// fier=function(manId,id){
+//         influencer.findOne({_id:id},(error,docu)=>{
+//             if (error){
+//                 reject(error)
+//             }else{
+//                resolve(removeinffromman(manId,docu))
+                
+//             }
+//            })
+// }
+changepassword=function(id,oldpass,newpass){
+    return new Promise((resolve,reject)=>{ 
+        manager.findOne({_id:id},(err,doc)=>{
+         if (manager().Compass(oldpass,doc.password)){
+            manager.updateOne({_id:id},{password:new manager().Hashpass(newpass)},(err,data)=>{
+                if (err){
+                    reject(err)
+                }else{
+                    resolve(data)
+                    }
+            })
+               }
+         else{
+             reject('the oldpassword is incorrect')
+         }
+    })})
+   
+}
+module.exports={loginman,updateman,delman,registry,
+    getmanager,
+    getallman,
+    getinfofman,
+    getmanbyid,
+    removeinffromman,
+    removemanfrominf,
+    upavatar,
+    changepassword}

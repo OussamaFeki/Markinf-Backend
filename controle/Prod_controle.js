@@ -5,12 +5,14 @@ addProduct=function(name,mark,image,description,price,tag,id){
         let newProduct=new products({
             name,
             mark,
-            image,
             description,
             price,
             tag,
             id_manager:id 
         });
+        if(image){
+            newProduct.image=`http://localhost:3000/image/${image.filename}`
+        }
         newProduct.save((err,doc)=>{
             if(err){
                 reject(err)
@@ -58,7 +60,9 @@ getone=function(id){
 }
 updateProd=function(id,name,mark,image,description,price){
     return new Promise((resolve,reject)=>{
-        products.updateOne({_id:id},{name,mark,image,description,price},(err,doc)=>{
+        products.updateOne({_id:id},{name,mark,
+            image:`http://localhost:3000/image/${image.filename}`   
+            ,description,price},(err,doc)=>{
             if(err){
                 reject(err)
             }
@@ -80,5 +84,16 @@ getprodofman=function(id){
         }
     })
   })
+}
+deleteallprodofman=function(id){
+    return new Promise((resolve,reject)=>{
+        products.deleteMany({id_manager:id},(err,doc)=>{
+            if(err){
+                reject(err)
+            }else{
+                resolve(doc)
+            }
+        })
+    })
 }
 module.exports={getallProd,addProduct,getone,deleteProd,updateProd,getprodofman}
