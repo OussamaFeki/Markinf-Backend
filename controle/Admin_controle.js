@@ -56,7 +56,7 @@ getall=function(){
         })
     })
 }
-deleteinf=function(id){
+deleteadmin=function(id){
     return new Promise((resolve,reject)=>{
         Admin.deleteOne({_id:id},(err,doc)=>{
             if (err){
@@ -69,7 +69,7 @@ deleteinf=function(id){
         })    
     })
 }
-editinf=function(id,fullname,email,password){
+editadmin=function(id,fullname,email,password){
     return new Promise((resolve,reject)=>{
         Admin.updateOne({_id:id},{fullname,email,password:new Admin().Hashpass(password)},(err,doc)=>{
             if (err){
@@ -110,4 +110,4 @@ search=function(fullname){
         })
     })
 }
-module.exports={getall,postNewadmin,deleteinf,editinf,login,search}
+module.exports={getall,postNewadmin,deleteadmin,editadmin,login,search}

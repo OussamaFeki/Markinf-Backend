@@ -3,6 +3,7 @@ const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 var contr=require('../controle/inf_controle');
 var newman=require('../controle/newman_controle')
+var Newman=require('../models/Newman')
 const passport=require('passport')
 const upload =require('../upload/upimg')
 require('dotenv').config()
@@ -46,9 +47,8 @@ check('repass').custom((value, {req})=>{
     const error=validationResult(req);
     if(!error.isEmpty()){
     var validationMassages=[]
-    for(var i=0 ;i<error.errors.length ; i++){
-      validationMassages.push(error.errors[i].msg)
-    }}else{var validationMassages = null;} 
+      validationMassages.push(error.errors[0].msg)
+    }else{var validationMassages = null;} 
     contr.postNewInf(req.body.fullname,req.body.email,req.body.password,req.body.repass,validationMassages)
     .then((doc)=>{res.status(200).json({doc,msg:'added !!'})})
     .catch((err)=>{res.status(400).json(err)})
@@ -85,10 +85,6 @@ route.get('/research',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-route.post('/addnewman',(req,res,next)=>{
-    newman.addmantonewman(req.body.infid,req.body.id)
-    .then(doc=>res.status(200).json(doc)) 
-})
 route.get('/facebook',passport.authenticate('facebook'))
  route.get('/facebook/cb',passport.authenticate('facebook',{
     failureRedirect:'/auth/signin'}),(req,res)=>{
@@ -118,7 +114,22 @@ route.get('/refuseman',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
 })
 route.get('/addnewman',(req,res,next)=>{
+    var io = req.app.get('socketio');
     newman.addmantonewman(req.query.id,req.query.manid)
+    .then(doc=>{res.status(200).json(doc)
+        Newman.findOne({id_inf:doc.id_inf}).populate('managers','-influencers -password').then(doc=>{
+            io.emit(`data ${doc.id_inf}`,doc.managers)
+        })  
+    })
+})
+route.get('/newmanid',(req,res,next)=>{
+    newman.finding(req.query.id_inf,req.query.id_man)
     .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
+})
+route.get('/findmanid',(req,res,next)=>{
+    contr.finding(req.query.id_man,req.query.id_inf)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
 })
 module.exports=route

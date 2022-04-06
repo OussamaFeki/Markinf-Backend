@@ -6,6 +6,8 @@ var manager=require('../models/managers');
 var Admin=require('../models/Admin');
 const Newman=require('../models/Newman')
 var newinf=require('../controle/newinf_cont')
+const fs=require("fs")
+var filepath='./uploads/'
 require('dotenv').config();
 postNewInf=function(fullname,email,password,repass,error){
     return new Promise((resolve,reject)=>{
@@ -52,6 +54,24 @@ postNewInf=function(fullname,email,password,repass,error){
 }
 upavatar=function(id,image){
     return new Promise((resolve,reject)=>{
+        influencer.findOne({_id:id},(err,doc)=>{
+            if(err){
+                console.log('error of foundation')
+            }else{
+                if(doc.image){
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })}else{
+                     console.log('there is no file to delete')
+                 }
+            }
+        })
         influencer.updateOne({_id:id},{
             image:`http://localhost:3000/image/${image.filename}`
         },(err,doc)=>{
@@ -77,6 +97,24 @@ getall=function(){
 }
 deleteinf=function(id){
     return new Promise((resolve,reject)=>{
+        influencer.findOne({_id:id},(err,doc)=>{
+            if(err){
+                console.log('error of foundation')
+            }else{
+                if(doc.image){
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })}else{
+                     console.log('there is no file to delete')
+                 }
+            }
+        })
         influencer.deleteOne({_id:id},(err,doc)=>{
             if (err){
                 reject(err)
@@ -216,6 +254,17 @@ changepassword=function(id,oldpass,newpass){
     })})
    
 }
+finding=function(manid,id){
+    return new Promise((resolve,reject)=>{
+        influencer.findOne({_id:id}).populate('managers','_id').then(doc=>{
+            for(let res of doc.managers){
+            if(res._id==manid){
+                resolve(true)
+            }}
+            resolve(false)
+        })  
+    })
+}
 module.exports={getall,
     postNewInf,
     deleteinf,
@@ -226,4 +275,6 @@ module.exports={getall,
     getmanofinf,
     getinfbyid,
     changepassword,
-    upavatar}
+    upavatar,
+    finding
+}

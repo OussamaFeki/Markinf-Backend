@@ -1,5 +1,6 @@
 var products=require('../models/Products');
-
+var fs =require('fs')
+var filepath='./uploads/'
 addProduct=function(name,mark,image,description,price,tag,id){
     return new Promise((resolve,reject)=>{
         let newProduct=new products({
@@ -36,15 +37,36 @@ getallProd=function(){
 }
 deleteProd=function(id){
     return new Promise((resolve,reject)=>{
-        products.deleteOne({_id:id},(err,doc)=>{
+        products.findOneAndDelete({_id:id},(err,doc)=>{
             if(err){
                 reject(err)
             }
             else{
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })
+                
                 resolve(doc)
             }
         })
     })
+}
+getnameimage=function(id){
+    products.findOneAndDelete({_id:id},(err,doc)=>{
+            if(err){
+                console.log(error)
+            }else{imagename=doc.image.slice(28)
+                return imagename
+            }
+            
+        })
+    
 }
 getone=function(id){
  return new Promise((resolve,reject)=>{
@@ -60,6 +82,21 @@ getone=function(id){
 }
 updateProd=function(id,name,mark,image,description,price){
     return new Promise((resolve,reject)=>{
+        products.findOne({_id:id},(err,doc)=>{
+            if(err){
+                console.log('error of foundation')
+            }else{
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })
+            }
+        })
         products.updateOne({_id:id},{name,mark,
             image:`http://localhost:3000/image/${image.filename}`   
             ,description,price},(err,doc)=>{
@@ -96,4 +133,4 @@ deleteallprodofman=function(id){
         })
     })
 }
-module.exports={getallProd,addProduct,getone,deleteProd,updateProd,getprodofman}
+module.exports={getallProd,addProduct,getone,deleteProd,updateProd,getprodofman,getnameimage,deleteallprodofman}

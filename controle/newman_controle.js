@@ -153,4 +153,15 @@ getallinvit=function(id){
         })    
     })
 }
-module.exports={getallinvit,accepter,addmantonewman,removemanfromnewman}
+finding=function(manid,id){
+    return new Promise((resolve,reject)=>{
+        Newman.findOne({id_inf:id}).populate('managers','_id').then(doc=>{
+            for(let res of doc.managers){
+            if(res._id==manid){
+                resolve(true)
+            }}
+            resolve(false)
+        })  
+    })
+}
+module.exports={getallinvit,addmantoinf,addmantonewman,removemanfromnewman,finding}

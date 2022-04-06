@@ -3,7 +3,9 @@ var influencer=require("../models/influencers")
 const jwt=require('jsonwebtoken');
 var Admin=require('../models/Admin');
 const Newinf = require("../models/Newinf");
-
+var fs=require("fs")
+var filepath='./uploads/'
+let managersids=[]
 require('dotenv').config();
 updateman=function(id,fullname,email,image,password){
   return new Promise((resolve,reject)=>{
@@ -18,6 +20,24 @@ updateman=function(id,fullname,email,image,password){
 }
 upavatar=function(id,image){
     return new Promise((resolve,reject)=>{
+        manager.findOne({_id:id},(err,doc)=>{
+            if(err){
+                console.log('error of foundation')
+            }else{
+                if(doc.image){
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })}else{
+                     console.log('there is no file to delete')
+                 }
+            }
+        })
         manager.updateOne({_id:id},{
             image:`http://localhost:3000/image/${image.filename}`
         },(err,doc)=>{
@@ -74,11 +94,24 @@ registry=function(fullname,email,password,repass,error){
     }
 delman=function(id){
     return new Promise((resolve,reject)=>{
-        manager.deleteOne({_id:id},(err,doc)=>{
+        manager.findOneAndDelete({_id:id},(err,doc)=>{
             if(err){
                 reject(err)
             }
             else{
+                if(doc.image){
+                imagename=doc.image.slice(28)
+                fs.unlink(filepath+imagename,(err)=>{
+                     if(err){
+                         reject('error in deleting file')
+                     }
+                     else{
+                         console.log('deleted succesfully')
+                     }
+                 })
+                }else{
+                    console.log('there is no file to delete')
+                }
                 resolve(doc)
             }
         })
@@ -120,6 +153,31 @@ getmanager=function(fullname){
     })
     
 }
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
+search=function(fullname){
+    return new Promise((resolve,reject)=>{
+        if(fullname) {
+            const regex = new RegExp(escapeRegex(fullname), 'gi');
+            manager.find({fullname:regex},(err,doc)=>{
+                if(err){
+                    reject(err)
+                }else{
+                    resolve(doc)
+                }
+            })
+        } else {
+            manager.find({},(err,doc)=>{
+                if(err){
+                    reject(err)
+                }else{
+                    resolve(doc)
+                }
+            })
+        }
+    })
+}
 getmanbyid=function(id){
         return new Promise((resolve,reject)=>{
             manager.findOne({_id:id},(err,doc)=>{
@@ -144,7 +202,7 @@ getallman=function(){
 }
 getinfofman=function(id){
     return new Promise((resolve,reject)=>{
-     manager.findById(id).populate("influencers", "-managers").then((doc)=>{resolve(doc.influencers)})})
+    manager.findById(id).populate("influencers", "-managers").then((doc)=>{resolve(doc.influencers)})})
 }
 removeinffromman= function(manId, infId) {
     return new Promise((resolve,reject)=>{
@@ -189,20 +247,6 @@ removemanfrominf=function(infId,manId){
         })
     }) 
 }
-// fiering=function(manId,docu,id,doc){
-// removeinffromman(manId,docu)
-// removemanfrominf(id,doc)
-// }
-// fier=function(manId,id){
-//         influencer.findOne({_id:id},(error,docu)=>{
-//             if (error){
-//                 reject(error)
-//             }else{
-//                resolve(removeinffromman(manId,docu))
-                
-//             }
-//            })
-// }
 changepassword=function(id,oldpass,newpass){
     return new Promise((resolve,reject)=>{ 
         manager.findOne({_id:id},(err,doc)=>{
@@ -221,6 +265,17 @@ changepassword=function(id,oldpass,newpass){
     })})
    
 }
+finding=function(infid,id){
+    return new Promise((resolve,reject)=>{
+        manager.findOne({_id:id}).populate('influencers','_id').then(doc=>{
+            for(let res of doc.influencers){
+            if(res._id==infid){
+             resolve(true)
+            }}
+            resolve(false)
+        })  
+    })
+}
 module.exports={loginman,updateman,delman,registry,
     getmanager,
     getallman,
@@ -229,4 +284,6 @@ module.exports={loginman,updateman,delman,registry,
     removeinffromman,
     removemanfrominf,
     upavatar,
-    changepassword}
+    changepassword,
+    search,
+    finding}
