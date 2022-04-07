@@ -82,7 +82,8 @@ route.get('/addnewinf',(req,res,next)=>{
  .then(doc=>{res.status(200).json(doc)
    modnewinf.findOne({id_manager:doc.id_manager}).populate('influencers','-managers  -password').then(doc=>{
      io.emit(`data ${doc.id_manager}`,doc.influencers)
- })
+     io.emit(`notifman ${doc.id_manager}`,true) 
+    })
 })
 })
 route.get('/addinfs',(req,res,next)=>{
@@ -96,8 +97,16 @@ route.get('/addman',(req,res,next)=>{
   .then(doc=>res.status(200).json({doc:doc,msg:'added'}))
 })
 route.get('/refuse',(req,res,next)=>{
+  var io = req.app.get('socketio');
   newinf.removeinffromnewinf(req.query.man_id,req.query.id)
-  .then(doc=>res.status(200).json(doc))
+  .then(doc=>{res.status(200).json(doc.influencers)
+      io.emit(`data ${doc.id_manager}`,doc.influencers)
+      // if(!doc.influencers){
+      //   io.emit(`notifman ${doc.id_manager}`,false)
+      // }
+       
+    //  })
+  })
 })
 route.get('/fir',(req,res,next)=>{
   contr.removeinffromman(req.query.man_id,req.query.id)
@@ -132,8 +141,13 @@ route.get('/researchman',(req,res,next)=>{
   .catch(err=>res.status(400).json(err))
 })
 route.get('/infid',(req,res,next)=>{
+  var io = req.app.get('socketio');
   contr.finding(req.query.id_inf,req.query.id_man)
-  .then(doc=>res.status(200).json(doc))
+  .then(doc=>{
+    res.status(200).json(doc)
+    io.emit('find',doc)
+  
+  })
   .catch(err=>res.status(400).json(err))
 })
 module.exports=route

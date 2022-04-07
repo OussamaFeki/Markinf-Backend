@@ -14,14 +14,17 @@ const storage =multer.diskStorage({
 })
 var upload =multer({
     storage: storage,
-    // fileFilter: function (req,file,callBack){
-    //     if(file.mimetype ==="image/png"|| file.mimetype ==="image/jpg"){
-    //         callBack(null,true)
-    //     }else{
-    //         console.log('only jpg & png file supported!')
-    //         callBack(null,false)
-    //     }
-    // },
+     fileFilter: function (req,file,callBack){
+         if(file.mimetype ==="image/png"||
+           file.mimetype ==="image/jpg" ||
+           file.mimetype == "image/jpeg"      
+           ){
+             callBack(null,true)
+         }else{
+             console.log('only jpg & png file supported!')
+             callBack(null,false)
+         }
+    },
     limits:{
         fileSize: 1024 * 1024 *2
     }

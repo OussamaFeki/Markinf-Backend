@@ -110,15 +110,22 @@ route.put('/upavatarofinf/:id',upload.single('image'),(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
 })
 route.get('/refuseman',(req,res,next)=>{
+    var io = req.app.get('socketio');
     newman.removemanfromnewman(req.query.inf_id,req.query.man_id)
-    .then(doc=>res.status(200).json(doc))
+    .then(doc=>{res.status(200).json(doc)
+        io.emit(`datainf ${doc.id_inf}`,doc.managers)
+         
+    })
 })
 route.get('/addnewman',(req,res,next)=>{
     var io = req.app.get('socketio');
     newman.addmantonewman(req.query.id,req.query.manid)
     .then(doc=>{res.status(200).json(doc)
         Newman.findOne({id_inf:doc.id_inf}).populate('managers','-influencers -password').then(doc=>{
-            io.emit(`data ${doc.id_inf}`,doc.managers)
+            io.emit(`datainf ${doc.id_inf}`,doc.managers)
+            if(doc.managers){
+            io.emit(`notif ${doc.id_inf}`,true)
+        }    
         })  
     })
 })
