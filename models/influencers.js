@@ -13,9 +13,8 @@ var influencer=mongoose.Schema({
         type:String,
         required:true,
     },
-    facebook_id:{
-        type:String,
-        required:false
+    profile:{
+        type:mongoose.Schema.Types.ObjectId,ref:'profile'
     },
     image:{
         type:String,

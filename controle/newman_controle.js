@@ -164,4 +164,16 @@ finding=function(manid,id){
         })  
     })
 }
-module.exports={getallinvit,addmantoinf,addmantonewman,removemanfromnewman,finding}
+removelistnewman=function(id){
+    return new Promise((resolve,reject)=>{
+        newinf.deleteOne({id_inf:id},(err,doc)=>{
+            if(err){
+                reject(err)
+            }else{
+                resolve(doc)
+            }
+        })
+    })
+    
+}
+module.exports={getallinvit,addmantoinf,addmantonewman,removemanfromnewman,finding,removelistnewman}

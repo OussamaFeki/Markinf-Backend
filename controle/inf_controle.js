@@ -4,6 +4,7 @@ const jwt=require('jsonwebtoken');
 var contr=require('../controle/manager_controle')
 var manager=require('../models/managers');
 var Admin=require('../models/Admin');
+var profile=require('../models/profile')
 const Newman=require('../models/Newman')
 var newinf=require('../controle/newinf_cont')
 const fs=require("fs")
@@ -203,6 +204,27 @@ search=function(fullname){
         }
     })
 }
+addproftoinf=function(infId,profid){
+    return new Promise ((resolve,reject)=>{
+        profile.findOne({_id:profid},(err,prof)=>{
+           if (err){
+               reject(err)
+           }else{
+            influencer.findByIdAndUpdate(
+                infId,
+                { profile: prof._id},
+                { new: true, useFindAndModify: false}
+             ,(err,doc)=>{
+                 if (err){
+                     reject(err)
+                 }else{
+                     resolve(doc)
+                 }
+             })
+           }
+        })
+    })
+}
 removemanfrominf=function(infId,manId){
     return new Promise ((resolve,reject)=>{
         manager.findOne({_id:manId},(err,man)=>{
@@ -276,5 +298,6 @@ module.exports={getall,
     getinfbyid,
     changepassword,
     upavatar,
-    finding
+    finding,
+    addproftoinf
 }

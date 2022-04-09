@@ -85,12 +85,16 @@ route.get('/research',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-route.get('/facebook',passport.authenticate('facebook'))
- route.get('/facebook/cb',passport.authenticate('facebook',{
-    failureRedirect:'/auth/signin'}),(req,res)=>{
-     res.redirect('/dashboard')
-    }
-)
+// route.get('/auth/facebook',
+//   passport.authenticate('facebook'));
+
+// route.get('/auth/facebook/cb',
+//   passport.authenticate('facebook', { failureRedirect: '/login' }),
+//   function(req, res) {
+//     // Successful authentication, redirect home.
+//     // res.redirect('/');
+//     res.status(400).json('succeded')
+//   });
 route.get('/mansofinf/:id',(req,res,next)=>{
     contr.getmanofinf(req.params.id)
     .then(doc=>res.status(200).json(doc))
@@ -139,4 +143,11 @@ route.get('/findmanid',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
+route.delete('/dellistinf/:id_inf',(req,res,next)=>{
+    newman.removelistnewman(req.params.id_inf)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err))
+})
+route.get('/facebook', passport.authenticate('facebook'))
+route.get('/facebook/cb',passport.authenticate('facebook'))
 module.exports=route

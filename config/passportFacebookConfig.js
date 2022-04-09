@@ -1,22 +1,23 @@
 const passport=require('passport')
 const FacebookStrategy=require('passport-facebook').Strategy
-const influencer=require('../models/influencers')
+const modprofile=require('../models/profile')
 const {facebook} =require('./config')
+var session =require('express-session')
 passport.use(new FacebookStrategy({
     clientID:facebook.client_id,
     clientSecret:facebook.client_secret,
-    callbackURL:"/auth/facebook/cb"
+    callbackURL:"http://localhost:3000/auth/facebook/cb"
  },(accessToken, refreshToken, profile, done)=>{
-    influencer.findOne({facebookId: profile.id}).then((currentUser)=>{
+    modprofile.findOne({facebookId: profile.id}).then((currentUser)=>{
         if(currentUser){
-            done(null, currentUser)
+            done('this fb is already used')
         }else{
-            const influencer= new influencer({
-                fullname:profile._json.name,
-                facebookId:profile.id,
+            const newprofile = new modprofile({
+                username:profile._json.name,
+                facebookId:profile.id
             })
-            user.save().then(()=>console.log("user saved to DB."))
-            done(null, user) 
+            newprofile.save().then(()=>console.log("user saved to DB."))
+            done(null, newprofile) 
         }
     })
 }))

@@ -120,24 +120,24 @@ removeinffromnewinf=function(manid, infid){
         })
     })
 }
-accepter=function(id_manager,id){
-    return new Promise((resolve,reject)=>{
-     manager.findOne({_id:id_manager},(err,doc)=>{
-         if(err){
-             reject(err)
-         }else{
-             influencer.findOne({_id:id},(error,docu)=>{
-              if (error){
-                  reject(error)
-              }else{
-               resolve(addinftoman(id_manager,docu),addmantoinf(id,doc),removeinffromnewinf(id_manager,docu))
-              }
-             })
-         }
+// accepter=function(id_manager,id){
+//     return new Promise((resolve,reject)=>{
+//      manager.findOne({_id:id_manager},(err,doc)=>{
+//          if(err){
+//              reject(err)
+//          }else{
+//              influencer.findOne({_id:id},(error,docu)=>{
+//               if (error){
+//                   reject(error)
+//               }else{
+//                resolve(addinftoman(id_manager,docu),addmantoinf(id,doc),removeinffromnewinf(id_manager,docu))
+//               }
+//              })
+//          }
          
-     })
-    })
-}
+//      })
+//     })
+// }
 refuse=function(id_manager,id){
     return new Promise((resolve,reject)=>{
      influencer.findOne({_id:id},(error,docu)=>{
@@ -192,7 +192,6 @@ removelistnewinf=function(id){
  }
 module.exports={getallinvit,
     refuse,
-    accepter,
     addinftonewinf,
     getallnewinf,
     removeinffromnewinf,

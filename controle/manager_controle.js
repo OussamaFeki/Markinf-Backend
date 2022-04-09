@@ -250,7 +250,10 @@ removemanfrominf=function(infId,manId){
 changepassword=function(id,oldpass,newpass){
     return new Promise((resolve,reject)=>{ 
         manager.findOne({_id:id},(err,doc)=>{
-         if (manager().Compass(oldpass,doc.password)){
+            if(err){
+                reject(err)
+            }else{
+         if(manager().Compass(oldpass,doc.password)){
             manager.updateOne({_id:id},{password:new manager().Hashpass(newpass)},(err,data)=>{
                 if (err){
                     reject(err)
@@ -261,7 +264,7 @@ changepassword=function(id,oldpass,newpass){
                }
          else{
              reject('the oldpassword is incorrect')
-         }
+         }}
     })})
    
 }

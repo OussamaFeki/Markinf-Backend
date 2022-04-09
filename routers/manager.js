@@ -130,7 +130,7 @@ route.delete('/dellist/:id_man',(req,res,next)=>{
   .then(doc=>res.status(200).json(doc))
   .catch(err=>res.status(400).json(err))
 })
-route.put('/configman/:id_man',(req,res,next)=>{
+route.patch('/configman/:id_man',(req,res,next)=>{
   contr.changepassword(req.params.id_man,req.body.oldpass,req.body.newpass)
   .then(doc=>res.status(200).json(doc))
   .catch(err=>res.status(400).json(err))
