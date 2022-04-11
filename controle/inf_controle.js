@@ -7,7 +7,8 @@ var Admin=require('../models/Admin');
 var profile=require('../models/profile')
 const Newman=require('../models/Newman')
 var newinf=require('../controle/newinf_cont')
-const fs=require("fs")
+const fs=require("fs");
+const { JsonWebTokenError } = require('jsonwebtoken');
 var filepath='./uploads/'
 require('dotenv').config();
 postNewInf=function(fullname,email,password,repass,error){
@@ -137,6 +138,7 @@ editinf=function(id,fullname,email,password){
         })
     })
 }
+
 var privatekey=process.env.PRIVATE_KEY
 login=function(email,password){
     return new Promise((resolve,reject)=>{
@@ -202,6 +204,24 @@ search=function(fullname){
                 }
             })
         }
+    })
+}
+addprof=function(id,name){
+    return new Promise((resolve,reject)=>{
+        profile.findOne({facebookId: id}).then((currentUser)=>{
+            if(currentUser){
+                reject('this facebook account is already used')
+            }else{
+                const newprofile = new profile({
+                    username:name,
+                    facebookId:id
+                })
+                newprofile.save().then((doc)=>{
+                    resolve(doc)
+                })
+                 
+            }
+        })
     })
 }
 addproftoinf=function(infId,profid){
@@ -299,5 +319,6 @@ module.exports={getall,
     changepassword,
     upavatar,
     finding,
-    addproftoinf
+    addproftoinf,
+    addprof
 }

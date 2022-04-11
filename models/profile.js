@@ -1,6 +1,6 @@
 const mongoose=require('mongoose');
 var Profilschema=mongoose.Schema({
-    usename:String,
+    username:String,
     facebookId:String
 });
 module.exports=mongoose.model('profile',Profilschema);

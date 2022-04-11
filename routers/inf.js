@@ -5,7 +5,8 @@ var contr=require('../controle/inf_controle');
 var newman=require('../controle/newman_controle')
 var Newman=require('../models/Newman')
 const passport=require('passport')
-const upload =require('../upload/upimg')
+const upload =require('../upload/upimg');
+const { contentType } = require('express/lib/response');
 require('dotenv').config()
 var privatekey=process.env.PRIVATE_KEY
 verifytoken=(req,res,next)=>{
@@ -148,6 +149,13 @@ route.delete('/dellistinf/:id_inf',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-route.get('/facebook', passport.authenticate('facebook'))
-route.get('/facebook/cb',passport.authenticate('facebook'))
+route.get('/countfb',(req,res,next)=>{
+    contr.addprof(req.query.id,req.query.name)
+    .then(doc=>res.status(200).json(doc))
+    .catch(err=>res.status(400).json(err)) 
+})
+route.get('/addproftoinf',(req,res,next)=>{
+    contr.addproftoinf(req.query.infid,req.query.profid)
+    .then(doc=>res.status(200).json(doc))
+})
 module.exports=route
