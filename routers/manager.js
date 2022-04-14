@@ -142,11 +142,11 @@ route.get('/researchman',(req,res,next)=>{
 })
 route.get('/infid',(req,res,next)=>{
   var io = req.app.get('socketio');
+  const idman=req.query.id_man
   contr.finding(req.query.id_inf,req.query.id_man)
   .then(doc=>{
     res.status(200).json(doc)
-    io.emit('find',doc)
-  
+    io.emit(`find${idman}`,doc)
   })
   .catch(err=>res.status(400).json(err))
 })

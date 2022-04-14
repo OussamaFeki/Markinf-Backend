@@ -4,10 +4,14 @@ const jwt = require('jsonwebtoken');
 var contr=require('../controle/inf_controle');
 var newman=require('../controle/newman_controle')
 var Newman=require('../models/Newman')
-const passport=require('passport')
 const upload =require('../upload/upimg');
-const { contentType } = require('express/lib/response');
+const axios =require('axios') 
 require('dotenv').config()
+const {facebook} =require('../config/config')
+const modprofile=require('../models/profile')
+passport=require('passport')
+var sess=require('express-session')
+const FacebookStrategy=require('passport-facebook').Strategy
 var privatekey=process.env.PRIVATE_KEY
 verifytoken=(req,res,next)=>{
     let token=req.headers.authorization
@@ -32,7 +36,48 @@ verifySecretclient=(req,res,next)=>{
     res.status(400).json({error:"you can't access to tis route without secret key and client key"})  
  }
 }
+passport.use(new FacebookStrategy({
+    clientID:facebook.client_id,
+    clientSecret:facebook.client_secret,
+    callbackURL:"http://localhost:3000/auth/facebook/callback",
+    enableProof:false
+  },
+  function(accessToken, refreshToken, profile, done) {
+    modprofile.findOne({facebookId: profile.id},(err,doc)=>{
+        if(err){
+            return done(err)
+        }
+        if(doc){
+           return done('this fb is already used')
+        }else{
+            // if there is no user found with that facebook id, create them
+            var newprof= new modprofile();
 
+            // set all of the facebook information in our user model
+           newprof.facebookId  = profile.id; // set the users facebook id                   
+           newprof.token = profile.token; // we will save the token that facebook provides to the user                    
+           newprof.username  = profile.displayName; // look at the passport user profile to see how names are returned
+
+            // save our user to the database
+            newprof.save(function(err) {
+                if (err)
+                    throw err;
+
+                // if successful, return the new user
+                return done(null, newprof);
+            });
+        }
+    })
+  }
+));
+passport.serializeUser((user,done)=>{
+    done(null, user.id)
+})
+passport.deserializeUser((id,done)=>{
+    influencer.findById(id).then((user)=>{
+        done(null,user)
+    })
+})
 
 route.post('/addinf',[check('fullname','full name is required').notEmpty(),
 check('email','email is required').notEmpty(),
@@ -86,16 +131,17 @@ route.get('/research',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-// route.get('/auth/facebook',
-//   passport.authenticate('facebook'));
-
-// route.get('/auth/facebook/cb',
-//   passport.authenticate('facebook', { failureRedirect: '/login' }),
-//   function(req, res) {
-//     // Successful authentication, redirect home.
-//     // res.redirect('/');
-//     res.status(400).json('succeded')
-//   });
+ route.get('/auth/facebook',
+   passport.authenticate ('facebook'));
+  
+ route.get('/auth/facebook/callback', function (req, res, next) {
+    var authenticator = passport.authenticate ('facebook', {
+      successRedirect: 'http://localhost:4200/influencer/config',
+      failureRedirect: '/', 
+ });
+//  delete req.session.returnTo;
+ authenticator (req, res, next);
+ })
 route.get('/mansofinf/:id',(req,res,next)=>{
     contr.getmanofinf(req.params.id)
     .then(doc=>res.status(200).json(doc))
@@ -157,5 +203,28 @@ route.get('/countfb',(req,res,next)=>{
 route.get('/addproftoinf',(req,res,next)=>{
     contr.addproftoinf(req.query.infid,req.query.profid)
     .then(doc=>res.status(200).json(doc))
+})
+route.get('/getpage',(req,res)=>{
+    // const idfacebook =req.query.fbid
+    // const text =req.body.text
+    // const img=req.body.img;
+    // axios.get(`https://graph.facebook.com/v13.0/${idfacebook}?fields=id%2Cname%2Crelationship_status%2Clikes%2Cpermissions%2Cposts&access_token=EAAs9v8bZCsfkBAPGoNtaOw1hw0swX0Ep5Rj9EEENq1Qs3KZCxIKEUMQ3gnLMEHZCHf1noFBJvNwhsSK3znrscZA68cPIyeyzFPbyeEaZCO9MqL2p25x1g81bqSBCKx4LZA27OHLd5UZAa7hm0ZCQv0Lg9mrVMrlLTKkExVGiZAJ7rjshPgbftASn97qZCdiQtKBtY4TiX4ZBsx98XED54aHT5Sw`)
+    // .then(function(response){
+    //     console.log(response)
+    // })
+async function getAccessTokenFromCode(code) {
+  const { data } = await axios({
+    url: 'https://graph.facebook.com/v13.0/oauth/access_token',
+    method: 'get',
+    params: {
+      client_id: facebook.client_id,
+      client_secret: facebook.client_secret,
+      redirect_uri: 'http://localhost:3000/auth/facebook/cb',
+      code,
+    },
+  });
+  console.log(data); // { access_token, token_type, expires_in }
+  return data.access_token;
+};
 })
 module.exports=route
