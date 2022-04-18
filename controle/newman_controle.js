@@ -166,7 +166,7 @@ finding=function(manid,id){
 }
 removelistnewman=function(id){
     return new Promise((resolve,reject)=>{
-        newinf.deleteOne({id_inf:id},(err,doc)=>{
+        Newman.deleteOne({id_inf:id},(err,doc)=>{
             if(err){
                 reject(err)
             }else{
@@ -176,4 +176,7 @@ removelistnewman=function(id){
     })
     
 }
-module.exports={getallinvit,addmantoinf,addmantonewman,removemanfromnewman,finding,removelistnewman}
+module.exports={getallinvit,addmantoinf,
+    addmantonewman,
+    removemanfromnewman,finding,
+    removelistnewman}

@@ -224,27 +224,6 @@ addprof=function(id,name){
         })
     })
 }
-addproftoinf=function(infId,profid){
-    return new Promise ((resolve,reject)=>{
-        profile.findOne({_id:profid},(err,prof)=>{
-           if (err){
-               reject(err)
-           }else{
-            influencer.findByIdAndUpdate(
-                infId,
-                { profile: prof._id},
-                { new: true, useFindAndModify: false}
-             ,(err,doc)=>{
-                 if (err){
-                     reject(err)
-                 }else{
-                     resolve(doc)
-                 }
-             })
-           }
-        })
-    })
-}
 removemanfrominf=function(infId,manId){
     return new Promise ((resolve,reject)=>{
         manager.findOne({_id:manId},(err,man)=>{
@@ -307,6 +286,24 @@ finding=function(manid,id){
         })  
     })
 }
+postfbinf=function(prof){
+    return new Promise((resolve,reject)=>{
+        influencer.findOne({facebookId:prof.id}).then((currentUser)=>{
+            if(currentUser){
+                resolve(currentUser)
+            }else{
+                const newinfluencer = new influencer({
+                    username:prof.displayName,
+                    facebookId:prof.id
+                })
+                newinfluencer.save().then((doc)=>{
+                    resolve(doc)
+                })
+                 
+            }
+        })
+    })
+}
 module.exports={getall,
     postNewInf,
     deleteinf,
@@ -319,6 +316,6 @@ module.exports={getall,
     changepassword,
     upavatar,
     finding,
-    addproftoinf,
-    addprof
+    addprof,
+    postfbinf
 }

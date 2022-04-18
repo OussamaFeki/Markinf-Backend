@@ -5,17 +5,21 @@ var influencer=mongoose.Schema({
         type:String,
         require:true
     },
+    facebookId:{
+        type:String,
+        required:false
+    },
     email:{
         type:String,
-        required:true
+        required:false
     },
     password:{
         type:String,
-        required:true,
+        required:false,
     },
-    profile:{
-        type:mongoose.Schema.Types.ObjectId,ref:'profile'
-    },
+    // profile:{
+    //     type:mongoose.Schema.Types.ObjectId,ref:'profile'
+    // },
     image:{
         type:String,
         required:false,

@@ -3,7 +3,8 @@ const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 var contr=require('../controle/inf_controle');
 var newman=require('../controle/newman_controle')
-var Newman=require('../models/Newman')
+var Newman=require('../models/Newman');
+var modinfluencer=require('../models/influencers')
 const upload =require('../upload/upimg');
 const axios =require('axios') 
 require('dotenv').config()
@@ -40,37 +41,51 @@ passport.use(new FacebookStrategy({
     clientID:facebook.client_id,
     clientSecret:facebook.client_secret,
     callbackURL:"http://localhost:3000/auth/facebook/callback",
-    enableProof:false
   },
   function(accessToken, refreshToken, profile, done) {
-    modprofile.findOne({facebookId: profile.id},(err,doc)=>{
-        if(err){
-            return done(err)
-        }
-        if(doc){
-           return done('this fb is already used')
-        }else{
-            // if there is no user found with that facebook id, create them
-            var newprof= new modprofile();
+//   contr.postfbinf(profile)
+//   .then(doc=>{done(null,doc)})
+//   .catch(err=>done(err)) 
+modinfluencer.findOne({facebookId: profile.id},(err,doc)=>{
+    if(err){
+        return done(err)
+    }
+    if(doc){
+       return done(null,doc)
+    }else{
+        // if there is no user found with that facebook id, create them
+        var newinfluencer= new modinfluencer();
 
-            // set all of the facebook information in our user model
-           newprof.facebookId  = profile.id; // set the users facebook id                   
-           newprof.token = profile.token; // we will save the token that facebook provides to the user                    
-           newprof.username  = profile.displayName; // look at the passport user profile to see how names are returned
-
-            // save our user to the database
-            newprof.save(function(err) {
-                if (err)
-                    throw err;
-
-                // if successful, return the new user
-                return done(null, newprof);
-            });
-        }
-    })
-  }
+        // set all of the facebook information in our user model
+      newinfluencer.facebookId  = profile.id; // set the users facebook id                   
+      newinfluencer.token = profile.token; // we will save the token that facebook provides to the user                    
+      newinfluencer.fullname  = profile.displayName; // look at the passport user profile to see how names are returned
+        // save our user to the database
+       newinfluencer.save((err,doc) =>{
+            if (err){throw err;}
+            else{let boite=new Newman({
+                id_inf:doc._id
+            })
+            boite.save((err,succ)=>{
+                if(err){
+                    return done(err)
+                }else{
+                    return done(null,doc);
+                }
+            })
+            }
+            // if successful, return the new user
+            
+        });
+    }
+})}
 ));
 passport.serializeUser((user,done)=>{
+    token= jwt.sign({
+         fullname:user.fullname,
+         id:user._id,
+         role:'influencer' 
+     },privatekey,{expiresIn:'10d'})
     done(null, user.id)
 })
 passport.deserializeUser((id,done)=>{
@@ -132,15 +147,16 @@ route.get('/research',(req,res,next)=>{
     .catch(err=>res.status(400).json(err))
 })
  route.get('/auth/facebook',
-   passport.authenticate ('facebook'));
+   passport.authenticate ('facebook',{scope: 'email,user_likes,user_posts,user_photos,user_friends'}));
   
  route.get('/auth/facebook/callback', function (req, res, next) {
     var authenticator = passport.authenticate ('facebook', {
-      successRedirect: 'http://localhost:4200/influencer/config',
-      failureRedirect: '/', 
+      failureRedirect: 'http://localhost:4200/login',
+      enableProof: true
  });
-//  delete req.session.returnTo;
  authenticator (req, res, next);
+ },(req,res)=>{
+   return res.redirect('http://localhost:4200/prof/?token='+token)
  })
 route.get('/mansofinf/:id',(req,res,next)=>{
     contr.getmanofinf(req.params.id)
@@ -190,7 +206,7 @@ route.get('/findmanid',(req,res,next)=>{
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
 })
-route.delete('/dellistinf/:id_inf',(req,res,next)=>{
+route.delete('/dellistnewman/:id_inf',(req,res,next)=>{
     newman.removelistnewman(req.params.id_inf)
     .then(doc=>res.status(200).json(doc))
     .catch(err=>res.status(400).json(err))
@@ -212,19 +228,5 @@ route.get('/getpage',(req,res)=>{
     // .then(function(response){
     //     console.log(response)
     // })
-async function getAccessTokenFromCode(code) {
-  const { data } = await axios({
-    url: 'https://graph.facebook.com/v13.0/oauth/access_token',
-    method: 'get',
-    params: {
-      client_id: facebook.client_id,
-      client_secret: facebook.client_secret,
-      redirect_uri: 'http://localhost:3000/auth/facebook/cb',
-      code,
-    },
-  });
-  console.log(data); // { access_token, token_type, expires_in }
-  return data.access_token;
-};
 })
 module.exports=route
